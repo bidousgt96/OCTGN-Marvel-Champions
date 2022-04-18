@@ -421,7 +421,7 @@ Toughness.
       <property name="Owner" value="temporal"/>
       <property name="Boost" value="2"/>
       <property name="BaseThreat" value="2"/>
-	  <property name="BaseThreatFixed" value="False"/>
+      <property name="BaseThreatFixed" value="False"/>
       <property name="Scheme_Hazard" value="1"/>
       <property name="Text">&lt;b&gt;Forced Interrupt:&lt;/b&gt; When this scheme is defeated, shuffle it into the encounter deck instead of discarding it.
 </property>
