@@ -77,6 +77,9 @@ def isEncounter(cards, x = 0, y = 0):
             return False
     return True
 
+def isPermanent(card):
+    return re.search('.*Permanent.*', card.properties["Text"], re.IGNORECASE)
+
 
 #------------------------------------------------------------
 # Shared Piles
@@ -727,6 +730,9 @@ def discard(card, x = 0, y = 0):
     mute()
     card.controller = me
 
+    if isPermanent(card):
+        notify("{} has 'Permanent' keyword and cannot be discarded!".format(card.name))
+        return
     if card.Type == "hero" or card.Type == "alter_ego" or card.Type == "main_scheme" or card.Type == "villain":
         return
     elif card.Owner == 'infinity_gauntlet':
