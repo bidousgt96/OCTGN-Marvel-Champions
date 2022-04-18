@@ -706,6 +706,11 @@ def revealHide(card, x = 0, y = 0):
                 card.alternate = ""
                 if isScheme([card]):
 				    clearMarker(card)
+
+            # Handle environments with counters (such as Criminal Enterprise, Avengers Tower, Bell Tower, ...)
+            # Some of them enters play with X counters
+            if card.Type == "environment":
+                lookForCounters(card)
     else:
         if card.isFaceUp:
             card.isFaceUp = False
@@ -1249,10 +1254,13 @@ def lookForCounters(card):
             strCharges = description_search.group(1)
             addMarker(card, x=0, y=0, qty=int(strCharges))
     
-        description_search = re.search('.*enters play with (\d) .*counters on.*', card.properties["Text"], re.IGNORECASE)
+        description_search = re.search('.*enters play with (\d)(\[per_player\])?.*counters on.*', card.properties["Text"], re.IGNORECASE)
         if description_search:
-            strCharges = description_search.group(1)
-            addMarker(card, x=0, y=0, qty=int(strCharges))
+            nb_base_counters = int(description_search.group(1))
+            nb_players = len(getPlayers())
+            # If more than one group found, then the number of counters changes with number of players
+            nb_counters = (nb_base_counters * nb_players) if len(description_search.groups()) > 1 else nb_base_counters
+            addMarker(card, x=0, y=0, qty=nb_counters)
 
 def placeThreatOnScheme(card):
     # Init the number of threats on main & side schemes
