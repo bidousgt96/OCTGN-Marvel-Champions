@@ -1256,7 +1256,7 @@ def lookForCounters(card):
             log_msg += "{} counter(s)".format(nb_base_counters)
 
             # Some cards (Fanaticism for example) add additional counters based on number of players
-            additional_search = re.search('.*(\d)\[per_player\] additional*.', card.properties["Text"], re.IGNORECASE)
+            additional_search = re.search('.*(\d).?\[per_player\] additional*.', card.properties["Text"], re.IGNORECASE)
             additional_counters = 0
             if additional_search:
                 nb_players = len(getPlayers())
@@ -1267,7 +1267,7 @@ def lookForCounters(card):
             total_counters = nb_base_counters + additional_counters
             addMarker(card, x=0, y=0, qty=total_counters)
     
-        description_search = re.search('.*enters play with (\d)(\[per_player\])?.*counters on.*', card.properties["Text"], re.IGNORECASE)
+        description_search = re.search('.*enters play with (\d).?(\[per_player\])?.*counters on.*', card.properties["Text"], re.IGNORECASE)
         if description_search:
             nb_base_counters = int(description_search.group(1))
             nb_players = len(getPlayers())
@@ -1280,7 +1280,7 @@ def placeThreatOnScheme(card):
     if isScheme([card]) and card.markers[ThreatMarker] == 0:
         if card.properties["BaseThreat"] is not None and card.properties["BaseThreat"] != '' and card.properties["BaseThreatFixed"] is not None:
             init_val = int(card.properties["BaseThreat"])
-            is_base_fixed = card.properties["BaseThreatFixed"]
+            is_base_fixed = card.properties["BaseThreatFixed"] == "True"
             nb_players = len(getPlayers())
             scheme_txt = card.properties["Text"]
             log_msg = "Initializing {} with ".format(card.name)
@@ -1293,9 +1293,9 @@ def placeThreatOnScheme(card):
             
             # Handle 'Hinder' (Hinder 3[per_player])
             add_hinder = 0
-            description_search = re.search('.*Hinder (\d)\[per_player\].*', card.properties["Text"], re.IGNORECASE)
+            description_search = re.search('.*Hinder (\d).?\[per_player\].*', card.properties["Text"], re.IGNORECASE)
             if description_search:
-                add_hinder = int(description_search.group(1))
+                add_hinder = int(description_search.group(1)) * nb_players
                 log_msg += " + {} threats from Hinder keyword".format(add_hinder)
 
             # Edge cases: add threats when revealed (but only if not already found Hinder text because the reminder contains the searched text)
@@ -1303,7 +1303,7 @@ def placeThreatOnScheme(card):
             add_others = 0
             description_search = re.search('.*Place an additional (\d).?\[per_hero\] threat here.*', card.properties["Text"], re.IGNORECASE)
             if description_search and add_hinder == 0:
-                add_others = int(description_search.group(1))
+                add_others = int(description_search.group(1)) * nb_players
                 log_msg += " + {} threats from card text".format(add_others)
 
             total_threats = base_threats + add_hinder + add_others
