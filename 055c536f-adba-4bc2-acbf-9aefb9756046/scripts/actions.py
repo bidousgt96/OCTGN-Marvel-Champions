@@ -725,7 +725,7 @@ def revealHide(card, x = 0, y = 0):
             lookForToughness(card)
             lookForCounters(card)
             placeThreatOnScheme(card)
-            setHPOnCharacter(card)
+            #setHPOnCharacter(card)  # Uncomment to try the HP automation for characters
 
 def discard(card, x = 0, y = 0):
     mute()
@@ -1246,7 +1246,7 @@ def autoCharges(args):
                 lookForCounters(card)
                 lookForToughness(card)
                 placeThreatOnScheme(card)
-                setHPOnCharacter(card)
+                #setHPOnCharacter(card)  # Uncomment to try the HP automation for characters
 
 def lookForToughness(card):
     """
