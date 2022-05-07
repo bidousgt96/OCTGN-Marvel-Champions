@@ -562,11 +562,12 @@ def SpecificVillainSetup(vName = ''):
                     first_encounter_card.moveTo(p.Deck)
             
                     # If players have been loaded before Villain: reset their hand and draw again
-                    notify("{} cards already in {}'s hand - Shuffle back into deck and draw a new end (Mysterio II setup)".format(len(p.piles['Hand']), me.name))
-                    for c in p.piles['Hand']:
-                        c.moveTo(p.Deck)
-                        p.Deck.shuffle()
-                    drawMany(p.deck, p.MaxHandSize)
+                    if len(p.piles['Hand']) > 0: 
+                        notify("{} cards already in {}'s hand - Shuffle back into deck and draw a new end (Mysterio II setup)".format(len(p.piles['Hand']), me.name))
+                        for c in p.piles['Hand']:
+                            c.moveTo(p.Deck)
+                            p.Deck.shuffle()
+                        drawMany(p.deck, p.MaxHandSize)
                 notifyBar("#0000FF", "Mysterio II: first encounter card has been shuffled into players deck!")
 
     if vName == 'Sinister Six':
