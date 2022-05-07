@@ -4,7 +4,7 @@
 
 def loadHero(group, x = 0, y = 0):
     mute()
-    if not deckNotLoaded(group):
+    if not deckNotLoaded(group, checkGroup = [c for c in me.Deck if not isEncounter([c])]):
         confirm("Cannot generate a deck: You already have cards loaded.  Reset the game in order to generate a new deck.")
         return
 
