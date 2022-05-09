@@ -1399,7 +1399,7 @@ def lookForCounters(card):
         nb_players = len(getPlayers())
 
         # This should match all "Uses (x whatever counters)" cases. Warning: some of them are based on number of players (such as Crossbone's Machine Gun)
-        description_search = re.search('.*\((\d+)(.?\[per_player\])?.*counters\)*.', card.properties["Text"], re.IGNORECASE)
+        description_search = re.search('.*Uses \((\d+)(.?\[per_player\])?.*counters\)*.', card.properties["Text"], re.IGNORECASE)
         if description_search:
             nb_base_counters = int(description_search.group(1))
             # If more than one group found, then the number of counters changes with number of players
