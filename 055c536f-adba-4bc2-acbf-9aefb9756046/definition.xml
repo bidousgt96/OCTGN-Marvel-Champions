@@ -160,6 +160,7 @@
         <groupaction menu="Next Scheme" execute="nextSchemeStage"/>
         <groupaction menu="Clear Targets" default="False" shortcut="Esc" execute="clearTargets" />
         <groupaction menu="Take control of Global cards" default="False" shortcut="F8" execute="passSharedControl" />
+        <groupaction menu="Unload Hero Deck" default="False" execute="unloadHeroDeck" />
         <groupactions menu="Saving Tools">
             <groupaction menu="Save Table State..." default="False" execute="saveManual" />
             <groupaction menu="Load Table State..." default="False" execute="loadManual" />

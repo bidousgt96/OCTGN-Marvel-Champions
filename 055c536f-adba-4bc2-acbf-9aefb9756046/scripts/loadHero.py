@@ -24,6 +24,7 @@ def loadHero(group, x = 0, y = 0):
         else:
             for card in cardsSelected:
                 deckname = createCards(me.Deck,sorted(eval(card.Owner).keys()), eval(card.Owner))
+            changeOwner(deckname, card.Owner)
             deleteCards(me.piles["Removed"])
 
     if choice == 2:
@@ -42,6 +43,24 @@ def loadHero(group, x = 0, y = 0):
 
     tableSetup()
 
+def unloadHeroDeck(group, x=0, y=0):
+    """
+    Remove all cards for one player: in hand, in piles and on table.
+    Highly inspired from SDA OCTGN implementation
+    """
+    mute()
+    for p in me.piles:
+        notify("{} removes cards from {}.".format(me, p))
+        [c.delete() for c in me.piles[p] if c.owner == me]
+
+    notify("Removing cards from {}'s hand.".format(me))
+    [c.delete() for c in me.hand if c.owner == me]
+
+    hero_cards = [c.Owner for c in group if c.owner == me and c.Type in ["hero", "alter_ego"]]
+    if len(hero_cards) == 1:
+        hero_id = hero_cards[0]
+        notify("Removing {}'s cards from table.".format(me))
+        [c.delete() for c in group if c.owner == me and c.Owner in [hero_id, "{}_nemesis".format(hero_id)]]
 
 def heroSetup(group=table, x = 0, y = 0):
 
@@ -124,6 +143,8 @@ def o8dLoad(o8d):
 
     start_deck = False
     end_deck = False
+    hero_id = ""
+    all_cards = []
     for line in lines:
         if line.find('<section name="Cards"') > -1:
             start_deck = True
@@ -135,11 +156,27 @@ def o8dLoad(o8d):
                 if matches.group(1) is not None and matches.group(2) is not None:
                     qty = int(matches.group(1))
                     card_id = matches.group(2)
-                    me.Deck.create(card_id, qty)
+                    cards = me.Deck.create(card_id, qty)
+                    if qty == 1:
+                        all_cards.append(cards)
+                        if cards.Type == "hero":
+                            hero_id = cards.Owner
+                    else:
+                        all_cards.extend(cards)
                 else:
-                    whisper("Error loading deck: Unknown card found.  Please restart game and try a different deck.")	
+                    whisper("Error loading deck: Unknown card found.  Please restart game and try a different deck.")
+    changeOwner(all_cards, hero_id)
+
+def changeOwner(cards, hero_id):
+    """
+    Change Owner property of a given list of cards if Owner is unknown (or aspect card).
+    """
+    for card in cards:
+        if card.Owner is None or card.Owner in ["", "basic", "justice", "leadership", "protection", "aggression"]:
+            card.Owner = hero_id
 
 def createAPICards(url):
+    all_cards = []
     if "decklist/" in str(url):
         deckid = url.split("view/")[1].split("/")[0]
         data, code = webRead("https://marvelcdb.com/api/public/decklist/{}".format(deckid))
@@ -159,10 +196,16 @@ def createAPICards(url):
             line = re.sub(rx,'',str(id))
             line = line.split(',')
             cardid = line[0]
-            card = me.Deck.create(card_mapping[cardid], int(line[1].strip()))
+            qty = int(line[1].strip())
+            card = me.Deck.create(card_mapping[cardid], qty)
             if card == None:
                 whisper("Error loading deck: Unknown card found.  Please restart game and try a different deck.")
-        me.Deck.create(card_mapping[hero])
+            if qty == 1:
+                all_cards.append(card)
+            else:
+                all_cards.extend(card)
+        hero_card = me.Deck.create(card_mapping[hero])
+        changeOwner(all_cards, hero_card.Owner)
         return deckname
     except ValueError:
         whisper("Error retrieving online deck data, please try again. If you are trying to load a non published deck make sure you have edited your account to select 'Share Your Decks'")

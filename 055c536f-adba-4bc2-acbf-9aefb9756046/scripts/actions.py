@@ -448,8 +448,14 @@ def getPosition(card,x=0,y=0):
     notify("This cards position is {}".format(card.position))
 
 def createCards(group,list,dict):
+    all_cards = []
     for i in list:
-        group.create(card_mapping[i],dict[i])
+        cards = group.create(card_mapping[i], dict[i])
+        if dict[i] == 1:
+            all_cards.append(cards)
+        else:
+            all_cards.extend(cards)
+    return all_cards
 
 def deleteCards(group):
     mute()
