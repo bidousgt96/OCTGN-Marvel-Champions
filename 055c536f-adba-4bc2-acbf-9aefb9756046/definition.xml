@@ -21,6 +21,7 @@
         <script src="scripts/constantsModular.py" />
         <script src="scripts/constantsVillain.py" />
         <script src="scripts/loadHero.py" />
+        <script src="scripts/loadFanMade.py" />
         <script src="scripts/loadModular.py" />
         <script src="scripts/loadVillain.py" />
         <script src="scripts/plugin.py" />
@@ -121,6 +122,7 @@
         <groupactions menu="Setup and Saving Tools">
             <groupaction menu="Load Universal Pre-Built Hero Deck" default="False" execute="loadPreBuiltDeck" />
             <groupaction menu="Unload Hero Deck" default="False" execute="unloadHeroDeck" />
+            <groupaction menu="Load FanMade Hero Deck" default="False" execute="loadFanMade_Hero" />
             <groupaction menu="Save Table State..." default="False" execute="saveManual" />
             <groupaction menu="Load Table State..." default="False" execute="loadManual" />
             <groupaction menu="Restore last Auto Save..." default="False" execute="restoreSave" />

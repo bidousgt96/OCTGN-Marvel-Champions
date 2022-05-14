@@ -53,7 +53,9 @@ def loadPreBuiltDeck(group, x=0, y=0):
 
     universal_prebuilt_List = sorted(universal_prebuilt.keys())
     prebuilt_Choice = askChoice("What Universal Pre-Built deck do you want to load?", universal_prebuilt_List)
-    deckname2 = createAPICards("https://marvelcdb.com/deck/view/{}".format(universal_prebuilt[universal_prebuilt_List[prebuilt_Choice-1]]), True)
+    deckname2 = createAPICards("https://marvelcdb.com/deck/view/{}".format(universal_prebuilt[universal_prebuilt_List[prebuilt_Choice-1]]), True, new_owner=card.Owner)
+
+    tableSetup()
 
 def unloadHeroDeck(group, x=0, y=0):
     """
@@ -102,9 +104,9 @@ def heroSetup(group=table, x = 0, y = 0):
 
     if newHero:
         me.deck.shuffle()
-        if len(me.piles["Nemesis"]) == 0:
+        if len(me.piles["Nemesis"]) == 0:		 
             nemesis_Deck = createCards(heroCard.owner.piles["Nemesis"],nemesis[str(heroCard.Owner)].keys(),nemesis[str(heroCard.Owner)])
-        changeOwner(nemesis_Deck, heroCard.Owner)
+            changeOwner(nemesis_Deck, heroCard.Owner)
 
         #------------------------------------------------------------
         # Specific Hero setup
@@ -155,35 +157,73 @@ def heroSetup(group=table, x = 0, y = 0):
 #------------------------------------------------------------
 # 'Load Hero' specific functions
 #------------------------------------------------------------
-
-def o8dLoad(o8d):
+def o8dLoadAsDict(o8d):
+    """
+    Load an .o8d file and build a global dict where keys are sections. It will then look like:
+    {
+        section_id_1: {
+            "section": the section name,
+            "shared": boolean True/False,
+            "cards": {
+                "card_id": qty,
+                "card_id": qty,
+            }
+        },
+        section_id_2: {
+            "section": the section name,
+            "shared": boolean True/False,
+            "cards": {
+                "card_id": qty,
+            }
+        },
+        ...
+    }
+    where section_id is the concatenation of section name and value of shared (as we can have section
+    with same names in both shared and not shared piles)
+    """
     with open(o8d, "rt") as f:
         lines = f.readlines()
 
-    start_deck = False
-    end_deck = False
-    hero_id = ""
-    all_cards = []
+    full_dict = {}
+    current_section = ""
     for line in lines:
-        if line.find('<section name="Cards"') > -1:
-            start_deck = True
-        if start_deck and line.find('</section>') > -1:
-            end_deck = True
-        if start_deck and not end_deck:
-            matches = re.search('<card qty=\"(\d+)\" id=\"([a-zA-Z0-9-]+)\"', line, re.IGNORECASE)
+        if line.strip().startswith("<section"):
+            name_matches = re.search('name="([a-zA-Z_]+)"', line, re.IGNORECASE)
+            shared_matches = re.search('shared="([a-zA-Z]+)"', line, re.IGNORECASE)
+            shared = False
+            if shared_matches:
+                shared = shared_matches.group(1) == "True"
+            if name_matches:
+                section = name_matches.group(1)
+                section_id = section + "_" + str(shared)
+                full_dict[section_id] = {"section": section, "shared": shared, "cards": {}}
+                current_section = section_id
+        if line.strip().startswith("<card"):
+            matches = re.search('<card qty="(\d+)" id="([a-zA-Z0-9-]+)"', line, re.IGNORECASE)
             if matches:
                 if matches.group(1) is not None and matches.group(2) is not None:
                     qty = int(matches.group(1))
                     card_id = matches.group(2)
-                    cards = me.Deck.create(card_id, qty)
-                    if qty == 1:
-                        all_cards.append(cards)
-                        if cards.Type == "hero":
-                            hero_id = cards.Owner
-                    else:
-                        all_cards.extend(cards)
-                else:
-                    whisper("Error loading deck: Unknown card found.  Please restart game and try a different deck.")
+                    full_dict[current_section]["cards"][card_id] = qty
+    return full_dict
+
+def o8dLoad(o8d):
+    """
+    Load a local .o8d file
+    Decks downloaded from marvelcdb have only one section named "Cards" with shared="False", so we can directly grab cards from this section
+    """	
+    full_dict = o8dLoadAsDict(o8d)
+
+    hero_id = ""
+    all_cards = []
+    for card_id,qty in full_dict["Cards_False"]["cards"].items():
+        cards = me.Deck.create(card_id, qty)
+        if qty == 1:
+            all_cards.append(cards)
+            if cards.Type == "hero":
+                hero_id = cards.Owner
+        else:
+            all_cards.extend(cards)
     changeOwner(all_cards, hero_id)
 
 def changeOwner(cards, hero_id):
@@ -194,7 +234,12 @@ def changeOwner(cards, hero_id):
         if card.Owner is None or card.Owner in ["", "basic", "justice", "leadership", "protection", "aggression"]:
             card.Owner = hero_id
 
-def createAPICards(url, filter = False):
+def createAPICards(url, filter=False, new_owner=""):
+    """
+    Create the deck by loading cards from a marvelcdb URL.
+    This function can load the whole deck or only cards that do not belong to the Hero (in this case, parameters 'filter' 
+    and 'new_owner' must be specified)
+    """
     notify("Looking {} for deck.".format(url))
     all_cards = []
     if "decklist/" in str(url):
@@ -225,12 +270,13 @@ def createAPICards(url, filter = False):
                 all_cards.append(card)
             else:
                 all_cards.extend(card)
-        # Filter cards to move only aspect cards il filter = True
+        # Filter cards to move only aspect cards if filter = True
         for c in me.piles["Setup"]:
             if not filter:
                 c.moveTo(me.Deck)
             elif filter and c.Owner != hero_card.Owner:
                 c.moveTo(me.Deck)
+                c.Owner = new_owner
                 all_cards.remove(c)
         deleteCards(me.piles["Setup"]) 
         changeOwner(all_cards, hero_card.Owner)
